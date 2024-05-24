@@ -233,9 +233,13 @@ Proof.
     inversion H_Assume; subst.
     eexists; split.
     - reflexivity.
-    - assert (st =[ assert b ]=> RNormal st).
-      + apply E_AssertTrue. assumption.
-      + assert (RNormal st /\ Q st)
+    - (* introduce assert as premisse *)
+      assert (st =[ assert b ]=> RNormal st).
+      + (* verify assert *)
+        apply E_AssertTrue. assumption.
+      + apply H in H0.
+        * destruct H0 as [st' [Heq HQ]]. inversion Heq; subst. assumption.
+        * assumption.
 Qed.
 
 
