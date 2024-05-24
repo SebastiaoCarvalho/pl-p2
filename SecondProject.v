@@ -163,7 +163,21 @@ Inductive ceval : com -> state -> result -> Prop :=
       beval st b = true ->
       st =[ c ]=> RError ->
       st =[ while b do c end ]=> RError
-  (* TODO *)
+  | E_AssertTrue : forall st b,
+      beval st b = true ->
+      st =[ assert b ]=> RNormal st
+  | E_AssertFalse : forall st b,
+      beval st b = false ->
+      st =[ assert b ]=> RError
+  | E_Assume: forall st b,
+      beval st b = true ->
+      st =[ assume b ]=> RNormal st
+  | E_NonDetChoice1 : forall st c1 c2 r,
+      st =[ c1 ]=> r ->
+      st =[ c1 !! c2 ]=> r
+  | E_NonDetChoice2 : forall st c1 c2 r,
+      st =[ c2 ]=> r ->
+      st =[ c1 !! c2 ]=> r 
 
 where "st '=[' c ']=>' r" := (ceval c st r).
 
@@ -199,14 +213,29 @@ Theorem assume_false: forall P Q b,
        (forall st, beval st b = false) ->
        ({{P}} assume b {{Q}}).
 Proof.
-  (* TODO *)
+  intros.
+  unfold hoare_triple.
+  intros st r H_Assume HP.
+  inversion H_Assume; subst; eexists; split.
+  - reflexivity. 
+  - assert (beval st b = false). apply H. 
+    rewrite H0 in H1. inversion H1.
 Qed.
 
 Theorem assert_implies_assume : forall P b Q,
      ({{P}} assert b {{Q}})
   -> ({{P}} assume b {{Q}}).
 Proof.
-  (* TODO *)
+    intros.
+    unfold hoare_triple.
+    unfold hoare_triple in H.
+    intros st r H_Assume HP.
+    inversion H_Assume; subst.
+    eexists; split.
+    - reflexivity.
+    - assert (st =[ assert b ]=> RNormal st).
+      + apply E_AssertTrue. assumption.
+      + assert (RNormal st /\ Q st)
 Qed.
 
 
