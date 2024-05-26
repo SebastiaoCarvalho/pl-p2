@@ -380,9 +380,15 @@ Qed.
 (* ================================================================= *)
 
 Theorem hoare_assert: forall P (b: bexp),
-  (*TODO: Hoare proof rule for [assert b] *)
+  {{P /\ b}} assert b {{P}}.
 Proof.
-  (* TODO *)
+  unfold hoare_triple; intros;
+  inversion H; subst.
+    - eexists. split. 
+      + reflexivity.
+      + destruct H0 as [HP Hb]. assumption.
+    - exfalso. destruct H0 as [HP Hb]. 
+    rewrite Hb in H2. discriminate.
 Qed.
 
 (* ================================================================= *)
@@ -390,9 +396,12 @@ Qed.
 (* ================================================================= *)
 
 Theorem hoare_assume: forall (P:Assertion) (b:bexp),
-  (*TODO: Hoare proof rule for [assume b] *)
+  {{P /\ b}} assume b {{P}}.
 Proof.
-  (* TODO *)
+  unfold hoare_triple; intros.
+  inversion H; subst. eexists. split.
+    - reflexivity.
+    - destruct H0 as [HP Hb]. assumption.
 Qed.
 
 
@@ -401,9 +410,17 @@ Qed.
 (* ================================================================= *)
 
 Theorem hoare_choice' : forall P c1 c2 Q,
-  (*TODO: Hoare proof rule for [c1 !! c2] *)
+  {{P}} c1 {{Q}} -> 
+  {{P}} c2 {{Q}} -> 
+  {{P}} c1 !! c2 {{Q}}.
 Proof.
-  (* TODO *)
+  unfold hoare_triple. intros. inversion H1; subst.
+  - (* Choice1 *)
+    apply H in H7. destruct H7 as [x [He HQ]]. exists x. split; 
+    try assumption. assumption.
+  - (* Choice2 *)
+    apply H0 in H7. destruct H7 as [x [He HQ]]. exists x. split; 
+    try assumption. assumption.
 Qed.
 
 
@@ -413,12 +430,22 @@ Qed.
 (*               words what this example is demonstrating.           *)                                            
 (* ================================================================= *)
 
+(* The example demonstrates that the postcondition can hold
+  regardless of which branch of the non-deterministic choice is taken. *)
 Example hoare_choice_example:
   {{ X = 1 }}
   X := X + 1 !! X := X + 2
   {{ X = 2 \/ X = 3 }}.
 Proof.
-  ( * TODO *)
+  apply hoare_choice'.
+    - (* choice 1 *)
+      eapply hoare_consequence_pre.
+      + apply hoare_asgn.
+      + assn_auto.
+    - (* choice 2 *)
+      eapply hoare_consequence_pre.
+      + apply hoare_asgn.
+      + assn_auto.
 Qed.
 
 
