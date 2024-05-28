@@ -482,6 +482,20 @@ Inductive cstep : (com * result)  -> (com * result) -> Prop :=
   | CS_While : forall st b c1,
           <{while b do c1 end}> / st 
       --> <{ if b then (c1; while b do c1 end) else skip end }> / st
+  | CS_AssertTrue : forall st b,
+      beval st b = true ->
+      <{ assert b }> / RNormal st --> <{ skip }> / RNormal st
+  | CS_AssertFalse : forall st b,
+      beval st b = false ->
+      <{ assert b }> / RNormal st --> <{ skip }> / RError
+  | CS_AssumeTrue : forall st b,
+      beval st b = true ->
+      <{ assume b }> / RNormal st --> <{ skip }> / RNormal st
+  | CS_NonDetChoice1 : forall st c1 c2,
+      <{ c1 !! c2 }> / st --> c1 / st
+  | CS_NonDetChoice2 : forall st c1 c2,
+      <{ c1 !! c2 }> / st --> c2 / st
+  
 
   (* TODO *)
   
@@ -545,7 +559,36 @@ Example prog1_example1:
        prog1 / RNormal (X !-> 1) -->* <{ skip }> / RNormal st'
     /\ st' X = 2.
 Proof.
-  (* TODO *)
+  eexists. split.
+  unfold prog1.
+
+  eapply multi_step. apply CS_SeqStep.
+    - apply CS_AssumeTrue. simpl. reflexivity.
+    - eapply multi_step. apply CS_SeqFinish.
+      -- eapply multi_step. apply CS_SeqStep. apply CS_NonDetChoice1.
+        --- eapply multi_step. apply CS_SeqStep. apply CS_AssStep. apply AS_Plus1. apply AS_Id.
+            eapply multi_step. apply CS_SeqStep. apply CS_AssStep. apply AS_Plus. simpl.
+            eapply multi_step. apply CS_SeqStep. apply CS_Asgn.
+            eapply multi_step. apply CS_SeqFinish.
+            eapply multi_step. apply CS_AssertTrue. simpl. reflexivity.
+            eapply multi_refl.
+  - reflexivity.
+
+  (*
+  eexists. split.
+  unfold prog1.
+
+  eapply multi_step. apply CS_SeqStep. 
+    - apply CS_AssumeTrue. simpl. reflexivity. 
+    - eapply multi_step. apply CS_SeqFinish.
+      -- eapply multi_step. apply CS_SeqStep. apply CS_NonDetChoice1.
+        --- eapply multi_step. apply CS_SeqStep. apply CS_AssStep. apply AS_Plus1 . apply AS_Id. 
+          ---- eapply multi_step. apply  CS_SeqStep. apply CS_AssStep. apply AS_Plus. simpl. 
+            ----- eapply multi_step. apply CS_SeqStep.  apply CS_Asgn. eapply multi_step. apply CS_SeqFinish.
+              ------ eapply multi_step. apply CS_AssertTrue.  simpl. reflexivity. eapply multi_refl.
+    - reflexivity.*)
+    
+
 Qed.
 
 
@@ -557,6 +600,8 @@ Lemma one_step_aeval_a: forall st a a',
   a / st -->a a' ->
   aeval st a = aeval st a'.
 Proof.
+ 
+  
   (* TODO (Hint: you can prove this by induction on a) *)
 Qed.
 
