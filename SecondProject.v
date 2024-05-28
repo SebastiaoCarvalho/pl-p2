@@ -495,9 +495,7 @@ Inductive cstep : (com * result)  -> (com * result) -> Prop :=
       <{ c1 !! c2 }> / st --> c1 / st
   | CS_NonDetChoice2 : forall st c1 c2,
       <{ c1 !! c2 }> / st --> c2 / st
-  
 
-  (* TODO *)
   
 
   where " t '/' st '-->' t' '/' st' " := (cstep (t,st) (t',st')).
@@ -587,7 +585,6 @@ Lemma one_step_aeval_a: forall st a a',
 Proof.
    intros st a a' H. induction H; simpl; try rewrite IHastep; reflexivity.
   (* ANum *)
-
   (*  - reflexivity.
   (* AId *)
   - simpl. rewrite IHastep. reflexivity.
