@@ -396,12 +396,12 @@ Qed.
 (* ================================================================= *)
 
 Theorem hoare_assume: forall (P:Assertion) (b:bexp),
-  {{P /\ b}} assume b {{P}}.
+  {{b -> P}} assume b {{P}}.
 Proof.
   unfold hoare_triple; intros.
   inversion H; subst. eexists. split.
     - reflexivity.
-    - destruct H0 as [HP Hb]. assumption.
+    - apply H0. assumption.
 Qed.
 
 
@@ -715,9 +715,9 @@ Inductive dcom : Type :=
 | DCPost (d : dcom) (Q : Assertion)
   (* d ->> {{ Q }} *)
 | DCAssert (b : bexp) (Q : Assertion)
-  (* assert b {{Q}}*)
+  (* assert b {{Q}} *)
 | DCAssume (b : bexp) (Q : Assertion)
-  (* assume b {{Q}}*)
+  (* assume b {{Q}} *)
 | DCNonDetChoice (d1 d2 : dcom) (Q : Assertion).
   (* d1 !! d2 {{Q}} *)
 
@@ -1014,15 +1014,12 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
       verification_conditions P d
       /\ (post d ->> Q)
   | DCAssert b Q =>
-      ((P /\ b) ->> Q)%assertion
-      /\ (P ->> Q)
+      (P ->> (Q /\ b))%assertion
   | DCAssume b Q =>
-      ((P /\ b) ->> Q)%assertion
-      /\ (P ->> Q)
+      (P ->> (b -> Q))%assertion
   | DCNonDetChoice d1 d2 Q =>
       verification_conditions P d1
       /\ verification_conditions P d2
-      /\ ((post d1 ->> Q) \/ (post d2 ->> Q))
   end.
 
 (** The key theorem states that [verification_conditions] does its job
@@ -1069,7 +1066,19 @@ Proof.
   - (* Post *)
     destruct H as [Hd HQ].
     eapply hoare_consequence_post; eauto.
-  (* TODO *)
+  - (* Assert *)
+    eapply hoare_consequence_pre.
+    + apply hoare_assert.
+    + assumption.
+  - (* Assume *)
+    eapply hoare_consequence_pre.
+    + apply hoare_assume.
+    + assumption. 
+  - (* Non determinism *)
+  destruct H as [H1 H2].
+    eapply hoare_choice'.
+    
+  
 Qed.
 
 
