@@ -574,21 +574,6 @@ Proof.
             eapply multi_refl.
   - reflexivity.
 
-  (*
-  eexists. split.
-  unfold prog1.
-
-  eapply multi_step. apply CS_SeqStep. 
-    - apply CS_AssumeTrue. simpl. reflexivity. 
-    - eapply multi_step. apply CS_SeqFinish.
-      -- eapply multi_step. apply CS_SeqStep. apply CS_NonDetChoice1.
-        --- eapply multi_step. apply CS_SeqStep. apply CS_AssStep. apply AS_Plus1 . apply AS_Id. 
-          ---- eapply multi_step. apply  CS_SeqStep. apply CS_AssStep. apply AS_Plus. simpl. 
-            ----- eapply multi_step. apply CS_SeqStep.  apply CS_Asgn. eapply multi_step. apply CS_SeqFinish.
-              ------ eapply multi_step. apply CS_AssertTrue.  simpl. reflexivity. eapply multi_refl.
-    - reflexivity.*)
-    
-
 Qed.
 
 
@@ -600,8 +585,28 @@ Lemma one_step_aeval_a: forall st a a',
   a / st -->a a' ->
   aeval st a = aeval st a'.
 Proof.
- 
-  
+   intros st a a' H. induction H; simpl; try rewrite IHastep; reflexivity.
+  (* ANum *)
+
+  (*  - reflexivity.
+  (* AId *)
+  - simpl. rewrite IHastep. reflexivity.
+  (*APLus1*)
+  - simpl. rewrite IHastep. reflexivity.
+  (*APLus2*)
+  - simpl.  reflexivity.
+  (*AMin1*)
+  - simpl. rewrite IHastep. reflexivity.
+  (*AMin2*)
+  - simpl. rewrite IHastep. reflexivity.
+  (*AMin3*) 
+  - simpl. reflexivity.
+  (*AMult1*)
+  - simpl. rewrite IHastep. reflexivity.
+  (*AMult2*) 
+  - simpl. rewrite IHastep. reflexivity. 
+  (*AMult3*)
+  - simpl. reflexivity.*)
   (* TODO (Hint: you can prove this by induction on a) *)
 Qed.
 
