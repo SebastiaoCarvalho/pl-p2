@@ -798,7 +798,7 @@ Fixpoint post (d : dcom) : Assertion :=
   | DCPost _ Q              => Q
   | DCAssert _ Q            => Q
   | DCAssume _ Q            => Q
-  | DCNonDetChoice _ _ Q    => Q
+  | DCNonDetChoice d1 d2 _    => post d1 \/ post d2
   end.
 
 Definition post_dec (dec : decorated) : Assertion :=
@@ -1027,13 +1027,20 @@ Proof.
     eapply hoare_consequence_pre.
     + apply hoare_assume.
     + assumption. 
-  - (* Non determinism *)
-  destruct H as [H1 H2].
-    eapply hoare_choice'.
-    
-  
+  - (* Non determinism *) 
+    apply hoare_choice'.
+    destruct H as [H1 H2].
+      + apply IHd1 in H1. apply IHd2 in H2. eapply hoare_consequence.
+        *apply H1.
+        *eauto.
+        *eauto.
+      +destruct H as [H1 H2].
+        * apply IHd1 in H1. apply IHd2 in H2. eapply hoare_consequence.
+          **apply H2.
+          **eauto.
+          **eauto.
+          
 Qed.
-
 
 (** Now that all the pieces are in place, we can define what it means
     to verify an entire program. *)
@@ -1237,18 +1244,18 @@ Proof. verify. Qed.
 (* TODO: fill in the assertions *)
 Definition sqrt_dec (m:nat) : decorated :=
   <{
-    {{ FILL_IN_HERE }} ->>
-    {{ FILL_IN_HERE }}
+    {{  X = m }} ->>
+    {{  X = m /\ 0*0 <= m }}
       Z := 0
-                    {{ FILL_IN_HERE }};
+                    {{  X=m /\  Z*Z <= m }};
       while ((Z+1)*(Z+1) <= X) do
-                    {{ FILL_IN_HERE  }} ->>
-                    {{ FILL_IN_HERE }}
+                    {{ X = m /\ Z* st Z<=m /\ (Z+1)*(Z+1)<= X }} ->>
+                    {{ X = m /\ (Z+1)*(Z+1)<=m }}
         Z := Z + 1
-                    {{ FILL_IN_HERE }}
+                    {{ X=m /\ Z*Z<=m }}
       end
-    {{ FILL_IN_HERE }} ->>
-    {{ FILL_IN_HERE }}
+    {{ X = m /\ Z*Z<=m /\ ~((Z+1)*(Z+1)<=X) }} ->>
+    {{ Z*Z<=m /\ m<(Z+1)*(Z+1) }}
   }>.
 
 Theorem sqrt_correct : forall m,
