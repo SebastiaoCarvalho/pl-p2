@@ -1039,7 +1039,7 @@ Proof.
           **apply H2.
           **eauto.
           **eauto.
-          
+
 Qed.
 
 (** Now that all the pieces are in place, we can define what it means
@@ -1249,7 +1249,7 @@ Definition sqrt_dec (m:nat) : decorated :=
       Z := 0
                     {{  X=m /\  Z*Z <= m }};
       while ((Z+1)*(Z+1) <= X) do
-                    {{ X = m /\ Z* st Z<=m /\ (Z+1)*(Z+1)<= X }} ->>
+                    {{ X = m /\ Z*  Z<=m /\ (Z+1)*(Z+1)<= X }} ->>
                     {{ X = m /\ (Z+1)*(Z+1)<=m }}
         Z := Z + 1
                     {{ X=m /\ Z*Z<=m }}
@@ -1260,7 +1260,9 @@ Definition sqrt_dec (m:nat) : decorated :=
 
 Theorem sqrt_correct : forall m,
   outer_triple_valid (sqrt_dec m).
-Proof. (* TODO *) Admitted.
+Proof. 
+  verify.
+Qed.
 
 
 
