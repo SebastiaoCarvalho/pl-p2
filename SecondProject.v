@@ -1028,18 +1028,13 @@ Proof.
     + apply hoare_assume.
     + assumption. 
   - (* Non determinism *) 
-    apply hoare_choice'.
-    destruct H as [H1 H2].
-      + apply IHd1 in H1. apply IHd2 in H2. eapply hoare_consequence.
-        *apply H1.
-        *eauto.
-        *eauto.
-      +destruct H as [H1 H2].
-        * apply IHd1 in H1. apply IHd2 in H2. eapply hoare_consequence.
-          **apply H2.
-          **eauto.
-          **eauto.
-
+    apply hoare_choice'; destruct H as [H1 H2]; 
+    apply IHd1 in H1; 
+    apply IHd2 in H2;
+    eapply hoare_consequence; 
+    try apply H1; 
+    try apply H2; 
+    eauto.
 Qed.
 
 (** Now that all the pieces are in place, we can define what it means
