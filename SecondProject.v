@@ -718,8 +718,8 @@ Inductive dcom : Type :=
   (* assert b {{Q}} *)
 | DCAssume (b : bexp) (Q : Assertion)
   (* assume b {{Q}} *)
-| DCNonDetChoice (d1 d2 : dcom) (Q : Assertion).
-  (* d1 !! d2 {{Q}} *)
+| DCNonDetChoice (d1 d2 : dcom).
+  (* d1 !! d2 *)
 
 (** To provide the initial precondition that goes at the very top of a
     decorated program, we introduce a new type [decorated]: *)
@@ -763,15 +763,12 @@ Notation "'assert' b {{ P }}"
 Notation "'assume' b {{ P }}"
       := (DCAssume b P)
       (in custom com at level 8, b custom com at level 0, P constr) : dcom_scope.
-Notation "d1 !! d2 {{ P }}"
-      := (DCNonDetChoice d1 d2 P)
+Notation "d1 !! d2"
+      := (DCNonDetChoice d1 d2)
       (in custom com at level 90, right associativity) : dcom_scope.
 Notation "{{ P }} d"
       := (Decorated P d)
       (in custom com at level 91, P constr) : dcom_scope.
-
-
-(* TODO: notation for the three new constructs *)
 
 Local Open Scope dcom_scope.
 
@@ -810,7 +807,7 @@ Fixpoint extract (d : dcom) : com :=
   | DCPost d _         => extract d
   | DCAssert b _       => CAssert b
   | DCAssume b _       => CAssume b
-  | DCNonDetChoice d1 d2 _ => CNonDetChoice (extract d1) (extract d2)
+  | DCNonDetChoice d1 d2 => CNonDetChoice (extract d1) (extract d2)
   end.
 
 Definition extract_dec (dec : decorated) : com :=
@@ -845,7 +842,7 @@ Fixpoint post (d : dcom) : Assertion :=
   | DCPost _ Q              => Q
   | DCAssert _ Q            => Q
   | DCAssume _ Q            => Q
-  | DCNonDetChoice d1 d2 _    => post d1 \/ post d2
+  | DCNonDetChoice d1 d2    => post d1 \/ post d2
   end.
 
 Definition post_dec (dec : decorated) : Assertion :=
@@ -1017,7 +1014,7 @@ Fixpoint verification_conditions (P : Assertion) (d : dcom) : Prop :=
       (P ->> (Q /\ b))%assertion
   | DCAssume b Q =>
       (P ->> (b -> Q))%assertion
-  | DCNonDetChoice d1 d2 Q =>
+  | DCNonDetChoice d1 d2 =>
       verification_conditions P d1
       /\ verification_conditions P d2
   end.
@@ -1365,27 +1362,50 @@ Proof.
   - replace (x+2) with (S ( S x)) in *; simpl in *; try lia.
 Qed.
 
-
 Definition parity_dec_nondet (m:nat) : decorated :=
-(* TODO: write a decorated version of the program shown above. The pre and post-conditions
-should not be changed. Note that the code below does
-not typecheck until you decorate it correctly. *)
 <{
-  {{ X = m }}
+  {{ X = m }} ->> {{ ap parity X = parity m }}
     while 2 <= X do
-      X := X - 2
-      !! 
-      X := X + 2
+      {{ ap parity X = parity m /\ 2 <= X }} ->> 
+          (* 2 <= x -> parity (X - 2) = parity X. *)
+          {{ ap parity (X - 2) = parity m }}
+      X := X - 2 {{ ap parity X = parity m }}
+      !!
+      X := X + 2 {{ ap parity X = parity m }}
     end
-  {{ X = parity m }} }>.
+  {{ ap parity X = parity m /\ ~(2 <= X) }} ->> 
+      (* ~ 2 <= X -> parity X = X. *)
+      {{ X = parity m }}
+}>.
 
 
 Theorem parity_outer_triple_valid_nondet : forall m,
   outer_triple_valid (parity_dec_nondet m).
-Proof. 
-  (* TODO *)
+Proof.
+  verify.
+    - destruct (st X).
+      + discriminate.
+      + destruct n.
+        * discriminate.
+        * lia.
+    - destruct (st X).
+      + lia.
+      + destruct n.
+        * lia.
+        * lia.
+    - destruct (st X).
+      + inversion H0.
+      + rewrite parity_ge_2.
+        * assumption.
+        * lia.
+    - destruct (st X).
+      + inversion H0.
+      + rewrite -> parity_plus_2.
+        assumption.
+    - rewrite <- H. rewrite -> parity_lt_2.
+      + reflexivity.
+      + assumption.
 Qed.
-
 
 End DCom.
 
